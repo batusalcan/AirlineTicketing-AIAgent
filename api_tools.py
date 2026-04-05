@@ -1,0 +1,97 @@
+"""
+API Tools Module.
+Contains functions wrapped as LangChain Tools to allow the LLM to interact
+with the external Airline Ticketing API (Midterm Project).
+"""
+
+import requests
+from langchain_core.tools import tool
+import config
+
+# Global variable to store the JWT token in memory during the session
+_JWT_TOKEN = None
+
+def get_auth_token() -> str:
+    """Authenticates the admin user and retrieves a JWT Bearer token."""
+    global _JWT_TOKEN
+    if _JWT_TOKEN is None:
+        auth_payload = {
+            "username": config.AUTH_USERNAME,
+            "password": config.AUTH_PASSWORD
+        }
+        response = requests.post(f"{config.BASE_API_URL}/auth/login", json=auth_payload)
+        
+        if response.status_code == 200:
+            _JWT_TOKEN = response.json() 
+        else:
+            raise PermissionError(f"Auth failed. Status: {response.status_code}")
+    
+    return _JWT_TOKEN
+
+@tool
+def query_available_flights(airport_from: str, airport_to: str, date_from: str) -> str:
+    """
+    Queries the airline system to find available flights between two airports on a specific date.
+    Input parameters should be 3-letter airport codes (e.g., 'IST', 'FRA', 'ESB').
+    The date_from must be in 'YYYY-MM-DD' format (e.g., '2026-08-20').
+    Returns a string representation of the flight schedule or an error message.
+    """
+    # .NET API will parse '2026-08-20' safely into a DateTime object without timezone conflicts
+    params = {
+        "airportFrom": airport_from,
+        "airportTo": airport_to,
+        "dateFrom": date_from, # Passing it clean without the T00:00:00Z string manipulation
+        "dateTo": date_from,   # Sending the same date for DateTo to avoid any null validation errors in DTO
+        "numberOfPeople": 1,
+        "isRoundTrip": "false" 
+    }
+    
+    try:
+        response = requests.get(f"{config.BASE_API_URL}/flight", params=params)
+        if response.status_code == 200:
+            flights = response.json()
+            if not flights:
+                return "No flights found for the given route and date."
+            return str(flights)
+        return f"Failed to query flights. API returned status code: {response.status_code}"
+    except Exception as e:
+        return f"Network error occurred while querying flights: {str(e)}"
+
+@tool
+def book_flight_ticket(flight_number: str, date: str, passenger_name: str) -> str:
+    """
+    Books a flight ticket for a passenger on a specific flight.
+    This operation reduces the flight capacity by 1.
+    Returns the booking confirmation including the Ticket Number.
+    """
+    try:
+        token = get_auth_token()
+        headers = {"Authorization": f"Bearer {token}"}
+        payload = {
+            "flightNumber": flight_number,
+            "date": date,
+            "passengerName": passenger_name
+        }
+        response = requests.post(f"{config.BASE_API_URL}/ticket/buy", json=payload, headers=headers)
+        
+        if response.status_code in [200, 201]:
+            return f"Success! Ticket booked. Details: {response.json()}"
+        return f"Failed to book ticket. Reason: {response.text}"
+    except Exception as e:
+        return f"Error booking ticket: {str(e)}"
+
+@tool
+def check_in_passenger(ticket_number: str) -> str:
+    """
+    Performs the check-in process for an already purchased ticket.
+    Assigns a sequential seat number to the passenger.
+    """
+    try:
+        payload = {"ticketNumber": ticket_number}
+        response = requests.post(f"{config.BASE_API_URL}/ticket/checkin", json=payload)
+        
+        if response.status_code in [200, 201]:
+            return f"Check-in successful. Details: {response.json()}"
+        return f"Check-in failed. Reason: {response.text}"
+    except Exception as e:
+        return f"Error during check-in: {str(e)}"
