@@ -1,3 +1,16 @@
+
 venv/
 __pycache__/
+*.pyc
+*.pyo
+
+
 .env
+
+
+.DS_Store
+
+
+frontend/node_modules/
+frontend/dist/
+frontend/.eslintcache
