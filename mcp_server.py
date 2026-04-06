@@ -76,17 +76,27 @@ def book_flight_ticket(flight_number: str, date: str, passenger_name: str) -> st
         return f"Error booking ticket: {str(e)}"
 
 @mcp.tool()
-def check_in_passenger(ticket_number: str) -> str:
+def check_in_passenger(flight_number: str, date: str, passenger_name: str) -> str:
     """
-    Performs the check-in process for an already purchased ticket.
-    Assigns a sequential seat number to the passenger.
+    Performs the check-in process for a passenger.
+    Requires the flight_number (e.g., TK9999), the date of the flight (YYYY-MM-DD), and the passenger_name.
     """
     try:
-        payload = {"ticketNumber": ticket_number}
-        response = requests.post(f"{config.BASE_API_URL}/ticket/checkin", json=payload)
+        token = get_auth_token()
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        # Senin Swagger'daki C# API modeline birebir uyan Payload
+        payload = {
+            "flightNumber": flight_number.strip(),
+            "date": date.strip(),
+            "passengerName": passenger_name.strip()
+        }
+        
+        response = requests.post(f"{config.BASE_API_URL}/ticket/checkin", json=payload, headers=headers)
+        
         if response.status_code in [200, 201]:
             return f"Check-in successful. Details: {response.json()}"
-        return f"Check-in failed. Reason: {response.text}"
+        return f"Check-in failed. API Status: {response.status_code}. Reason: {response.text}"
     except Exception as e:
         return f"Error during check-in: {str(e)}"
 
