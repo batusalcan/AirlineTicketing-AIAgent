@@ -93,13 +93,13 @@ AirlineTicketing-AIAgent/
 3. **Missing Authentication Token in Check-in Tool:**
    - _Issue:_ The check-in request was rejected with a `401 Unauthorized` status code.
    - _Solution:_ Implemented the `get_auth_token()` helper function within the check-in MCP tool to attach the JWT Bearer token dynamically before hitting the API Gateway.
-   4. **LLM Context Window Limit (Token Overflow):**
+4. **LLM Context Window Limit (Token Overflow):**
    - _Issue:_ Continuous, long chat sessions caused the `_chat_history` list to grow without bounds, eventually exceeding the local LLM's maximum token context limit and causing crashes.
    - _Solution:_ Implemented array trimming (`_chat_history[-10:]`) before feeding the prompt to the LangGraph agent, ensuring only the most relevant recent memory is retained while preventing token overflow.
-4. **JWT Token Expiration & Caching:**
+5. **JWT Token Expiration & Caching:**
    - _Issue:_ The `_JWT_TOKEN` was being permanently cached. If the system ran longer than the token's lifespan, subsequent tool calls (Book Flight, Check-in) silently failed with `401 Unauthorized`.
-   - _Solution:_ Updated the token logic to handle expirations gracefully, allowing the system to fetch a fresh token dynamically when the old one expires.
-5. **FastAPI Subprocess Memory Leaks (Zombie Processes):**
+   - _Solution:_ Updated the token logic to handle expirations gracefully by passing `force_refresh=True` on a 401 response, allowing the system to fetch a fresh token dynamically when the old one expires.
+6. **FastAPI Subprocess Memory Leaks (Zombie Processes):**
    - _Issue:_ Using the deprecated `@app.on_event("startup")` caused the MCP subprocess to remain open in the background even after shutting down the FastAPI server, leading to memory leaks.
    - _Solution:_ Migrated the application to FastAPI's modern `@asynccontextmanager` lifespan events. This guarantees that the `__aexit__` cleanup method is explicitly called on shutdown, safely terminating the `mcp_server.py` subprocess.
 
@@ -111,7 +111,7 @@ AirlineTicketing-AIAgent/
 
 - Node.js (v18+ recommended) and `npm` installed.
 - Python 3.10+ installed.
-- **Ollama** installed and running locally with the necessary model downloaded (e.g., `ollama run llama3.2:3b`).
+- **Ollama** installed and running locally with the necessary model downloaded: `ollama run llama3.1`
 
 ### Step 1: Start the Backend (API & Agent)
 
