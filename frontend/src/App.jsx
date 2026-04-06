@@ -157,7 +157,11 @@ function App() {
 
         {/* Bottom Input Area */}
         <div className="p-4 bg-white border-t flex items-center">
-          <button className="p-2 text-blue-500 hover:bg-blue-50 rounded-full transition mr-2">
+          <button
+            className="p-2 text-blue-500 hover:bg-blue-50 rounded-full transition mr-2"
+            onClick={() => alert("Attachment feature coming soon!")}
+            title="Attach file"
+          >
             <Plus size={24} />
           </button>
           <input

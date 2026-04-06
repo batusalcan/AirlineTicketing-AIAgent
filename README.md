@@ -61,6 +61,7 @@ AirlineTicketing-AIAgent/
 4. **Model Context Protocol (MCP):** To decouple the LLM from the actual API implementations, the project uses the official MCP architecture. `mcp_server.py` acts as an independent tool server, while `agent_backend.py` acts as the MCP Client.
 5. **Standard I/O (`stdio`) Communication:** The connection between the MCP Client and MCP Server is established using `stdio` subprocess communication. This ensures secure, robust, and isolated execution without opening unnecessary network ports for local tool execution, adhering to industry best practices.
 6. **Client-Server Architecture:** The React frontend is completely decoupled from the Python backend, communicating strictly via RESTful HTTP `POST /chat` calls.
+7. **Messaging Architecture (REST vs. Firestore):** While the assignment instructions suggested considering Firestore/Realtime Database for messaging, I opted for the "another API" approach mentioned in the same section and implemented a custom RESTful API (`POST /chat`) using FastAPI. This strictly aligns with the "Simple implementation idea" table provided in the assignment and ensures full control over the LangGraph execution and MCP tool routing without relying on third-party database triggers.
 
 ---
 
@@ -92,6 +93,15 @@ AirlineTicketing-AIAgent/
 3. **Missing Authentication Token in Check-in Tool:**
    - _Issue:_ The check-in request was rejected with a `401 Unauthorized` status code.
    - _Solution:_ Implemented the `get_auth_token()` helper function within the check-in MCP tool to attach the JWT Bearer token dynamically before hitting the API Gateway.
+   4. **LLM Context Window Limit (Token Overflow):**
+   - _Issue:_ Continuous, long chat sessions caused the `_chat_history` list to grow without bounds, eventually exceeding the local LLM's maximum token context limit and causing crashes.
+   - _Solution:_ Implemented array trimming (`_chat_history[-10:]`) before feeding the prompt to the LangGraph agent, ensuring only the most relevant recent memory is retained while preventing token overflow.
+4. **JWT Token Expiration & Caching:**
+   - _Issue:_ The `_JWT_TOKEN` was being permanently cached. If the system ran longer than the token's lifespan, subsequent tool calls (Book Flight, Check-in) silently failed with `401 Unauthorized`.
+   - _Solution:_ Updated the token logic to handle expirations gracefully, allowing the system to fetch a fresh token dynamically when the old one expires.
+5. **FastAPI Subprocess Memory Leaks (Zombie Processes):**
+   - _Issue:_ Using the deprecated `@app.on_event("startup")` caused the MCP subprocess to remain open in the background even after shutting down the FastAPI server, leading to memory leaks.
+   - _Solution:_ Migrated the application to FastAPI's modern `@asynccontextmanager` lifespan events. This guarantees that the `__aexit__` cleanup method is explicitly called on shutdown, safely terminating the `mcp_server.py` subprocess.
 
 ---
 
@@ -112,8 +122,8 @@ Open a terminal in the root directory (`AirlineTicketing-AIAgent/`):
 source venv/bin/activate  # On Mac/Linux
 venv\Scripts\activate     # On Windows
 
-# 2. Install Python dependencies (if not already installed)
-pip install fastapi uvicorn pydantic mcp langchain_mcp_adapters langchain_ollama langgraph requests
+# 2. Install Python dependencies using the requirements file
+pip install -r requirements.txt
 
 # 3. Start the Agent Backend (this will auto-start the MCP Server via stdio)
 python agent_backend.py
