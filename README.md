@@ -148,7 +148,29 @@ npm run dev
 
 _The React UI will now run on `http://localhost:5173`. Open this URL in your browser to start chatting with the AI Agent!_
 
-```
+## 🧪 Example Usage / Test Scenarios
 
+Once the application is running, you can test the AI Agent's capabilities by pasting the following prompts sequentially into the chat interface:
+
+1. **Query Flight:**
+   > _"Hi! Can you find available flights from Istanbul to Frankfurt on 2026-05-10?"_
+2. **Book Flight:**
+   > _"Great! I would like to book a ticket for Batuhan Salcan on flight TK1523 for that date."_
+3. **Check-in Passenger:**
+   > _"Awesome. Now I want to check in for my flight TK1523 on 2026-05-10 for Batuhan Salcan."_
+
+The AI will autonomously call the respective Midterm APIs, parse the JSON responses, and provide you with natural language confirmations.
+
+---
+
+## 🔮 Future Improvements
+
+While the current architecture successfully fulfills all assignment requirements, future iterations could include:
+
+- **Persistent Chat Memory:** Integrating a database (like PostgreSQL or MongoDB) to save user sessions across browser reloads.
+- **Cloud Deployment:** Containerizing the frontend, backend, and MCP server using Docker and deploying them to AWS or Azure.
+- **Enhanced Error Handling:** Providing the frontend with explicit UI elements (like toasts or cards) when an API goes down, rather than relying solely on the LLM's text response.
+
+```
 
 ```
