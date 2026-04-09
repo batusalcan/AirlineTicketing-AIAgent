@@ -11,7 +11,7 @@ This project is an AI-powered chat application built for an airline ticketing sy
 As per the assignment requirements, here are the core links to the project artifacts:
 
 - **Source Code Repository:** [AirlineTicketing-AIAgent on GitHub](https://github.com/batusalcan/AirlineTicketing-AIAgent)
-- **Project Presentation Video:** [Insert YouTube/Drive Link Here]
+- **Project Presentation Video:** [Presentation Video](https://youtu.be/fTkrvV0aU3g)
 - **Midterm Deployed Swagger URL:** [Airline API Gateway Swagger](https://batu-airline-gateway-final-d0hbhnc6c8fadgee.italynorth-01.azurewebsites.net/swagger/index.html)
 
 ---
